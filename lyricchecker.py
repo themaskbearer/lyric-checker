@@ -1,5 +1,7 @@
 
 from tkinter import *
+import requests
+from bs4 import BeautifulSoup
 
 
 class Application(Frame):
@@ -25,12 +27,14 @@ class Application(Frame):
         self._artist_label.grid(row=0, column=0, sticky=W)
 
         self._artist_text.grid(row=0, column=1)
+        self._artist_text.insert(0, "blessthefall")
 
         self._album_label["text"] = "Album Name:"
         self._album_label["justify"] = LEFT
         self._album_label.grid(row=1, column=0)
 
         self._album_text.grid(row=1, column=1)
+        self._album_text.insert(0, "Hollow Bodies")
 
         self._run_check_button["command"] = self.run_lyric_check
         self._run_check_button["text"] = "Check Lyrics"
@@ -39,8 +43,15 @@ class Application(Frame):
         self._check_result.grid(row=3, column=0, columnspan=2)
 
     def run_lyric_check(self):
+        URL = "https://www.azlyrics.com/" + self._artist_text.get()[0] + "/" + self._artist_text.get() + ".html"
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36'}
+        r = requests.get(URL, headers=headers)
+
+        soup = BeautifulSoup(r.content, 'html5lib')
+
+
         self._check_result["text"] = "Pass!"
-        self._check_result["fg"] = "green"
+        # self._check_result["fg"] = "green"
 
     def stop(self):
         self.quit()
