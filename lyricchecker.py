@@ -49,9 +49,39 @@ class Application(Frame):
 
         soup = BeautifulSoup(r.content, 'html5lib')
 
+        albums = soup.find_all('div', attrs={'class': 'album'})
+        for album in albums:
+            if self._album_text.get() in str(album):
+                selected_album = album
 
-        self._check_result["text"] = "Pass!"
-        # self._check_result["fg"] = "green"
+        songs = []
+        for sibling in selected_album.next_siblings:
+            if "id=" in str(sibling):
+                break
+
+            if sibling is None:
+                continue
+
+            if str(sibling).isspace() or "br/" in str(sibling):
+                continue
+
+            songs.append(sibling)
+
+        clean_album = True
+        for song in songs:
+            new_url = song["href"]
+            new_url = "https://www.azlyrics.com/" + new_url[3:]
+            song_request = requests.get(new_url, headers=headers)
+
+            songsoup = BeautifulSoup(song_request.content, 'html5lib')
+            print(songsoup.prettify())
+
+        if clean_album:
+            self._check_result["text"] = "Pass!"
+            self._check_result["fg"] = "green"
+        else:
+            self._check_result["text"] = "Fail!"
+            self._check_result["fg"] = "red"
 
     def stop(self):
         self.quit()
