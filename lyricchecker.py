@@ -2,6 +2,7 @@
 from tkinter import *
 import requests
 from bs4 import BeautifulSoup
+import time
 
 
 class Application(Frame):
@@ -43,7 +44,9 @@ class Application(Frame):
         self._check_result.grid(row=3, column=0, columnspan=2)
 
     def run_lyric_check(self):
+        print("Getting album...")
         URL = "https://www.azlyrics.com/" + self._artist_text.get()[0] + "/" + self._artist_text.get() + ".html"
+        print(URL)
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36'}
         r = requests.get(URL, headers=headers)
 
@@ -59,6 +62,9 @@ class Application(Frame):
             if "id=" in str(sibling):
                 break
 
+            if "comment" in str(sibling):
+                continue
+
             if sibling is None:
                 continue
 
@@ -67,6 +73,7 @@ class Application(Frame):
 
             songs.append(sibling)
 
+        print("Getting songs...")
         clean_album = True
         for song in songs:
             new_url = song["href"]
@@ -74,7 +81,11 @@ class Application(Frame):
             song_request = requests.get(new_url, headers=headers)
 
             songsoup = BeautifulSoup(song_request.content, 'html5lib')
-            print(songsoup.prettify())
+            if not self.check_song(songsoup):
+                clean_album = False
+                print("Failing song: " + new_url)
+
+            time.sleep(2)
 
         if clean_album:
             self._check_result["text"] = "Pass!"
@@ -82,6 +93,26 @@ class Application(Frame):
         else:
             self._check_result["text"] = "Fail!"
             self._check_result["fg"] = "red"
+
+    def check_song(self, song):
+        div = song.find('div', attrs={'class': 'ringtone'})
+
+        for sibling in div.next_siblings:
+            copy_comment = "!-- Usage of azlyrics.com content by any third-party lyrics provider is prohibited by our licensing agreement. Sorry about that."
+            if copy_comment in str(sibling):
+                lyrics = str(sibling)
+                break
+
+        return self.check_profanity(lyrics)
+
+    def check_profanity(self, lyrics):
+        contraband = {"shit", "damn", "fuck", "bitch", " ass "}
+
+        for word in contraband:
+            if word in lyrics:
+                return False
+
+        return True
 
     def stop(self):
         self.quit()
