@@ -1,3 +1,7 @@
+# Install the following packages with pip to use this script:
+#   - html5lib
+#   - BeautifulSoup4
+
 
 from tkinter import *
 import requests
@@ -6,7 +10,6 @@ import time
 
 
 class Application(Frame):
-    CONST_MOUSE_TRACK_REFRESH_sec = 0.1
 
     def __init__(self, master=None):
         Frame.__init__(self, master)
